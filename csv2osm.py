@@ -10,7 +10,8 @@ parser.add_argument("-x", "--lon", help="Name of the longitude/easting field", m
 parser.add_argument("-y", "--lat", help="Name of the latitude/northing field", metavar="FIELD_NAME")
 parser.add_argument("-l", "--locale", help="Locale used to convert coordinate fields to float")
 parser.add_argument("--proj4", help="Input coordinate system, given as a proj4 string", metavar="PROJ4_STRING")
-parser.add_argument("-z", "--zone", help="Set input coordinate system to UTM/SAD-69 (southern hemisphere) in the given UTM zone")
+parser.add_argument("--sirgas2000", metavar="ZONE", help="Set input coordinate system to SIRGAS2000 in the given UTM zone")
+parser.add_argument("--sad69", metavar="ZONE", help="Set input coordinate system to SAD69 in the given UTM zone")
 parser.add_argument('--way', action='store_true', help="Create a way joining all nodes")
 args = parser.parse_args()
 
@@ -21,8 +22,10 @@ if args.locale:
 
 if args.proj4:
     proj_in = Proj(args.proj4)
-elif args.zone:
-    proj_in = Proj('+proj=utm +zone={} +south +ellps=aust_SA +towgs84=-57,1,-41,0,0,0,0 +units=m +no_defs'.format(args.zone))
+elif args.sirgas2000:
+    proj_in = Proj('+proj=utm +zone={} +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs'.format(args.sirgas2000))
+elif args.sad69:
+    proj_in = Proj('+proj=utm +zone={} +south +ellps=aust_SA +towgs84=-57,1,-41,0,0,0,0 +units=m +no_defs'.format(args.sad69))
 else:
     proj_in = proj_out
 
