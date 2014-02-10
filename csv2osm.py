@@ -2,7 +2,7 @@
 
 from pyproj import Proj, transform
 from xml.sax.saxutils import quoteattr
-import pyproj, csv, argparse, sys, locale
+import csv, argparse, sys, locale, re
 
 parser = argparse.ArgumentParser(description="Convert csv spreadsheets to osm format.")
 parser.add_argument("csv", help="Input csv file")
@@ -29,6 +29,15 @@ elif args.sad69:
 else:
     proj_in = proj_out
 
+parse_dms = re.compile('(\d+)(?:°|º| deg)\s?(\d+)(?:\'|’| )\s?([\d,.]+)(?:"|”)?\s?([NSWE])')
+
+def parse_coord(c):
+    try:
+        return locale.atof(c)
+    except:
+        m = parse_dms.match(c)
+        return (locale.atof(m.group(1)) + locale.atof(m.group(2))/60 + locale.atof(m.group(3))/3600) * (-1 if m.group(4) in ['W', 'S'] else 1)
+
 f=open(args.csv, 'r')
 dialect = csv.Sniffer().sniff(f.read(1024))
 f.seek(0)
@@ -47,7 +56,7 @@ i=0
 for row in reader:
     i = i-1
     try:
-        (lon, lat) = transform(proj_in, proj_out, locale.atof(row.pop(xkey)), locale.atof(row.pop(ykey)))
+        (lon, lat) = transform(proj_in, proj_out, parse_coord(row.pop(xkey)), parse_coord(row.pop(ykey)))
     except:
         print("Skipping node {}: couldn't parse coordinates".format(i), file=sys.stderr)
         continue
